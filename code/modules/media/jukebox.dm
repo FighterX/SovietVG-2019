@@ -4,12 +4,17 @@
  * By N3X15
  *******************************/
 
+/datum/admins/verb/update_playlist()
+	set name = "Update Playlists"
+	set category = "Fun"
+	load_juke_playlists()
+
 var/global/global_playlists = list()
 /proc/load_juke_playlists()
 	if(!config.media_base_url)
 		return
-	for(var/playlist_id in list("bar", "bomberman", "depresso", "echoes","electronica", "emagged", "endgame", "filk", "folk", "malfdelta", "medbay", "metal", "muzakjazz", "nukesquad", "rap", "rock", "security", "shuttle", "thunderdome", "upbeathypedancejam", "SCOTLANDFOREVER"))
-		var/url="[config.media_base_url]/index.php?playlist=[playlist_id]"
+	for(var/playlist_id in list("bar", "jazz", "rock", "muzak", "emagged", "endgame", "clockwork", "vidyaone", "vidyatwo", "vidyathree", "vidyafour"))
+		var/url="[config.media_base_url]/jukebox.php?playlist=[playlist_id]"
 		//testing("Updating playlist from [url]...")
 
 		//  Media Server 2 requires a secret key in order to tell the jukebox
@@ -45,7 +50,7 @@ var/global/global_playlists = list()
 		playlist = temp.Copy()
 
 	else
-		var/url="[config.media_base_url]/index.php?playlist=[playlist_id]"
+		var/url="[config.media_base_url]/jukebox.php?playlist=[playlist_id]"
 		//testing("[src] - Updating playlist from [url]...")
 
 		//  Media Server 2 requires a secret key in order to tell the jukebox
@@ -125,7 +130,7 @@ var/global/global_playlists = list()
 		str += "\"[title]\""
 	else
 		str += "Untitled"
-	// Only show album if we have to.
+		// Only show album if we have to.
 	if(album!="" && artist == "")
 		str += " ([album])"
 	return str
@@ -1035,7 +1040,7 @@ var/global/list/loopModeNames=list(
 	name = "nanovinyl - shuttle"
 	unformatted = "shuttle"
 	formatted = "Shuttle"
-	/obj/item/weapon/vinyl/thunderdome
+/obj/item/weapon/vinyl/thunderdome
 	name = "nanovinyl - thunderdome"
 	unformatted = "thunderdome"
 	formatted =	"Thunderdome"
