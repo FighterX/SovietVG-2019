@@ -9,7 +9,8 @@
 	name = "Syndicate Traitors"
 	persistent = 1
 	role_category = /datum/role/traitor
-	protected_from_jobs = list("Security Officer", "Merchant", "Warden", "Head of Personnel", "Cyborg", "Detective", "Head of Security", "Captain")
+	protected_from_jobs = list("Security Officer", "Merchant", "Warden", "Head of Personnel", "Cyborg", "Detective",
+							"Head of Security", "Captain", "Chief Engineer", "Chief Medical Officer", "Research Director")
 	restricted_from_jobs = list("AI","Mobile MMI")
 	required_candidates = 1
 	weight = 5
@@ -22,7 +23,7 @@
 
 /datum/dynamic_ruleset/roundstart/traitor/execute()
 	var/traitor_scaling_coeff = 10 - max(0,round(mode.threat_level/10)-5)//above 50 threat level, coeff goes down by 1 for every 10 levels
-	var/num_traitors = min(round(mode.candidates.len / traitor_scaling_coeff) + 1, candidates.len)
+	var/num_traitors = min(round(mode.roundstart_pop_ready / traitor_scaling_coeff) + 1, candidates.len)
 	for (var/i = 1 to num_traitors)
 		var/mob/M = pick(candidates)
 		assigned += M
@@ -50,17 +51,21 @@
 //               CHANGELINGS                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                          //
 //////////////////////////////////////////////
-/*
+
+
+//note: this can only fire on snowmap
+
 /datum/dynamic_ruleset/roundstart/changeling
 	name = "Changelings"
-	role_category = CHANGELING
-	protected_from_jobs = list("Security Officer", "Warden", "Merchant", "Head of Personnel", "Detective", "Head of Security", "Captain")
+	role_category = /datum/role/changeling
+	protected_from_jobs = list("Security Officer", "Warden","Merchant", "Head of Personnel", "Detective",
+							"Head of Security", "Captain", "Chief Engineer", "Chief Medical Officer", "Research Director")
 	restricted_from_jobs = list("AI","Cyborg","Mobile MMI")
-	enemy_jobs = list("Security Officer","Detective","Head of Security", "Captain")
-	required_enemies = list(1,1,0,0,0,0,0,0,0,0)
+	enemy_jobs = list("Security Officer","Detective", "Warden", "Head of Security", "Captain")
+	required_enemies = list(2,2,2,1,1,1,1,0,0,0)
 	required_candidates = 1
 	weight = 3
-	cost = 30
+	cost = 18
 	requirements = list(80,60,40,20,20,10,10,10,10,10)
 	high_population_requirement = 30
 
@@ -75,7 +80,7 @@
 		newChangeling.Greet(GREET_ROUNDSTART)
 	return 1
 
-*/
+
 //////////////////////////////////////////////
 //                                          //
 //               VAMPIRES                   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,18 +90,19 @@
 /datum/dynamic_ruleset/roundstart/vampire
 	name = "Vampires"
 	role_category = /datum/role/vampire
-	protected_from_jobs = list("Security Officer", "Warden","Merchant", "Head of Personnel", "Detective", "Head of Security", "Captain")
+	protected_from_jobs = list("Security Officer", "Warden","Merchant", "Head of Personnel", "Detective",
+							"Head of Security", "Captain", "Chief Engineer", "Chief Medical Officer", "Research Director")
 	restricted_from_jobs = list("AI","Cyborg","Mobile MMI", "Chaplain")
-	enemy_jobs = list("Security Officer","Detective","Head of Security", "Captain")
-	required_enemies = list(1,1,0,0,0,0,0,0,0,0)
+	enemy_jobs = list("Security Officer","Detective", "Warden", "Head of Security", "Captain", "Chaplain")
+	required_enemies = list(2,2,2,1,1,1,1,0,0,0)
 	required_candidates = 1
 	weight = 2
 	cost = 15
-	requirements = list(80,60,50,30,20,10,10,10,10,10)
+	requirements = list(80,70,60,60,30,20,10,10,10,10)
 	high_population_requirement = 30
 
 /datum/dynamic_ruleset/roundstart/vampire/execute()
-	var/num_vampires = min(round(mode.candidates.len / 10) + 1, candidates.len)
+	var/num_vampires = min(round(mode.roundstart_pop_ready / 10) + 1, candidates.len)
 	for (var/i = 1 to num_vampires)
 		var/mob/M = pick(candidates)
 		assigned += M
@@ -216,7 +222,9 @@
 /datum/dynamic_ruleset/roundstart/bloodcult
 	name = "Blood Cult"
 	role_category = /datum/role/cultist
-	restricted_from_jobs = list("Merchant","AI", "Cyborg", "Mobile MMI", "Security Officer", "Warden", "Detective", "Head of Security", "Captain", "Chaplain", "Head of Personnel", "Internal Affairs Agent")
+	restricted_from_jobs = list("Merchant","AI", "Cyborg", "Mobile MMI", "Security Officer", "Warden", "Detective",
+							"Head of Security", "Captain", "Chaplain", "Head of Personnel", "Internal Affairs Agent",
+							"Chief Engineer", "Chief Medical Officer", "Research Director")
 	enemy_jobs = list("Security Officer","Warden", "Detective","Head of Security", "Captain")
 	required_enemies = list(3,3,2,2,2,2,2,1,1,0)
 	required_candidates = 4
@@ -359,11 +367,11 @@
 	enemy_jobs = list("Security Officer", "Warden","Detective","Head of Security", "Captain", "Scientist", "Chemist", "Research Director", "Chief Engineer")
 	restricted_from_jobs = list("Security Officer", "Warden","Detective","Head of Security", "Captain", "Research Director", "Chief Engineer")
 	job_priority = list("AI","Cyborg")
-	required_enemies = list(4,4,4,4,4,4,2,2,2,0)
+	required_enemies = list(3,3,3,2,2,2,1,1,1,1)
 	required_candidates = 1
-	weight = 3
+	weight = 2
 	cost = 40
-	requirements = list(90,90,90,90,80,70,50,30,20,10)
+	requirements = list(90,80,70,60,50,40,40,30,30,20)
 	high_population_requirement = 60
 	flags = HIGHLANDER_RULESET
 
@@ -415,7 +423,7 @@
 /datum/dynamic_ruleset/roundstart/blob
 	name = "Blob Conglomerate"
 	role_category = /datum/role/blob_overmind/
-	restricted_from_jobs = list("AI", "Cyborg", "Security Officer", "Warden","Detective","Head of Security", "Captain", "Head of Personnel")
+	restricted_from_jobs = list("AI", "Cyborg", "Mobile MMI", "Security Officer", "Warden","Detective","Head of Security", "Captain", "Head of Personnel")
 	enemy_jobs = list("AI", "Cyborg", "Security Officer", "Warden","Detective","Head of Security", "Captain")
 	required_enemies = list(3,3,3,3,3,2,1,1,0,0)
 	required_candidates = 1

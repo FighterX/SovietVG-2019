@@ -282,34 +282,6 @@
 		radio.talk_into(speech)
  	return
 
-////////////////////////////
-///// Action processing ////
-////////////////////////////
-/*
-/atom/DblClick(object,location,control,params)
-	var/mob/M = src.mob
-	if(M && M.in_contents_of(/obj/mecha))
-
-		if(mech_click == world.time)
-			return
-		mech_click = world.time
-
-		if(!istype(object, /atom))
-			return
-		if(istype(object, /obj/abstract/screen))
-			var/obj/abstract/screen/using = object
-			if(using.screen_loc == ui_acti || using.screen_loc == ui_iarrowleft || using.screen_loc == ui_iarrowright)//ignore all HUD objects save 'intent' and its arrows
-				return ..()
-			else
-				return
-		var/obj/mecha/Mech = M.loc
-		spawn() //this helps prevent clickspam fest.
-			if (Mech)
-				Mech.click_action(object,M)
-//	else
-//		return ..()
-*/
-
 /obj/mecha/proc/click_action(atom/target,mob/user)
 	if(!src.occupant || src.occupant != user )
 		return
@@ -446,7 +418,8 @@
 	if(src.throwing)//high velocity mechas in your face!
 		var/breakthrough = 0
 		if(istype(obstacle, /obj/structure/window/))
-			obstacle.Destroy(brokenup = 1)
+			var/obj/structure/window/W = obstacle
+			W.shatter()
 			breakthrough = 1
 
 		else if(istype(obstacle, /obj/structure/grille/))
@@ -1196,6 +1169,7 @@
 	if(!isnull(src.loc) && H && H.client && H in range(1))
 		H.reset_view(src)
 		H.stop_pulling()
+		H.unlock_from()
 		H.forceMove(src)
 		src.occupant = H
 		src.add_fingerprint(H)
@@ -1213,18 +1187,6 @@
 		//change the cursor
 		if(H.client && cursor_enabled)
 			H.client.mouse_pointer_icon = file("icons/mouse/mecha_mouse.dmi")
-		/* -- Mode/mind specific stuff goes here
-		if(H.mind)
-			if(isrev(H) || isrevhead(H))
-				ticker.mode.update_all_rev_icons()
-			if(isnukeop(H))
-				ticker.mode.update_all_synd_icons()
-			if (iscult(H))
-				ticker.mode.update_all_cult_icons()
-			if(iswizard(H) || isapprentice(H))
-				ticker.mode.update_all_wizard_icons()
-		// -- End mode specific stuff
-		*/
 
 		return 1
 	else
@@ -1434,19 +1396,6 @@
 		//change the cursor
 		if(src.occupant && src.occupant.client)
 			src.occupant.client.mouse_pointer_icon = initial(src.occupant.client.mouse_pointer_icon)
-
-		/* -- Mode/mind specific stuff goes here
-		if(src.occupant.mind)
-			if(isrev(src.occupant) || isrevhead(src.occupant))
-				ticker.mode.update_all_rev_icons()
-			if(isnukeop(src.occupant))
-				ticker.mode.update_all_synd_icons()
-			if (iscult(src.occupant))
-				ticker.mode.update_all_cult_icons()
-			if(iswizard(src.occupant) || isapprentice(src.occupant))
-				ticker.mode.update_all_wizard_icons()
-		// -- End mode specific stuff
-		*/
 
 		src.occupant = null
 		src.icon_state = src.initial_icon+"-open"
@@ -1693,16 +1642,21 @@
 						</head>
 						<body>
 						<h1>Following keycodes are present in this system:</h1>"}
+
 	for(var/a in operation_req_access)
 		output += "[get_access_desc(a)] - <a href='?src=\ref[src];del_req_access=[a];user=\ref[user];id_card=\ref[id_card]'>Delete</a><br>"
+
+	output += "<a href='?src=\ref[src];del_all_req_access=1;user=\ref[user];id_card=\ref[id_card]'><br><b>Delete All</b></a><br>"
+
 	output += "<hr><h1>Following keycodes were detected on portable device:</h1>"
 	for(var/a in id_card.access)
 		if(a in operation_req_access)
 			continue
-		var/a_name = get_access_desc(a)
-		if(!a_name)
+		if(!get_access_desc(a))
 			continue //there's some strange access without a name
-		output += "[a_name] - <a href='?src=\ref[src];add_req_access=[a];user=\ref[user];id_card=\ref[id_card]'>Add</a><br>"
+		output += "[get_access_desc(a)] - <a href='?src=\ref[src];add_req_access=[a];user=\ref[user];id_card=\ref[id_card]'>Add</a><br>"
+
+	output += "<a href='?src=\ref[src];add_all_req_access=1;user=\ref[user];id_card=\ref[id_card]'><br><b>Add All</b></a><br>"
 
 	output += {"<hr><a href='?src=\ref[src];finish_req_access=1;user=\ref[user]'>Finish</a> <font color='red'>(Warning! The ID upload panel will be locked. It can be unlocked only through Exosuit Interface.)</font>
 		</body></html>"}
@@ -1917,10 +1871,25 @@
 		operation_req_access += topic_filter.getNum("add_req_access")
 		output_access_dialog(topic_filter.getObj("id_card"),topic_filter.getMob("user"))
 		return
+	if(href_list["add_all_req_access"] && add_req_access && topic_filter.getObj("id_card"))
+		if(!in_range(src, usr))
+			return
+		var/obj/item/weapon/card/id/mycard = topic_filter.getObj("id_card")
+		var/list/myaccess = mycard.access
+		for(var/a in myaccess)
+			operation_req_access += a
+		output_access_dialog(topic_filter.getObj("id_card"),topic_filter.getMob("user"))
+		return
 	if(href_list["del_req_access"] && add_req_access && topic_filter.getObj("id_card"))
 		if(!in_range(src, usr))
 			return
 		operation_req_access -= topic_filter.getNum("del_req_access")
+		output_access_dialog(topic_filter.getObj("id_card"),topic_filter.getMob("user"))
+		return
+	if(href_list["del_all_req_access"] && add_req_access && topic_filter.getObj("id_card"))
+		if(!in_range(src, usr))
+			return
+		operation_req_access = list()
 		output_access_dialog(topic_filter.getObj("id_card"),topic_filter.getMob("user"))
 		return
 	if(href_list["finish_req_access"])

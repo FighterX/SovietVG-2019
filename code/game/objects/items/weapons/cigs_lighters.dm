@@ -112,11 +112,6 @@ MATCHBOXES ARE ALSO IN FANCY.DM
 		location.hotspot_expose(source_temperature, 5, surfaces = istype(loc, /turf))
 		return
 
-/obj/item/weapon/match/is_hot()
-	if(lit == 1)
-		return source_temperature
-	return 0
-
 /obj/item/weapon/match/attack(mob/living/carbon/M as mob, mob/living/carbon/user as mob)
 	if(istype(M.wear_mask, /obj/item/clothing/mask/cigarette) && user.zone_sel.selecting == "mouth" && lit == 1)
 		var/obj/item/clothing/mask/cigarette/cig = M.wear_mask
@@ -625,7 +620,6 @@ MATCHBOXES ARE ALSO IN FANCY.DM
 	desc = "A budget lighter. More likely lit more fingers than it did light smokes."
 	icon = 'icons/obj/items.dmi'
 	icon_state = "lighter"
-	item_state = "lighter"
 	w_class = W_CLASS_TINY
 	throwforce = 4
 	flags = null

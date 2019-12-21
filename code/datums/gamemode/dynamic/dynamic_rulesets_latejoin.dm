@@ -28,7 +28,7 @@
 
 /datum/dynamic_ruleset/latejoin/ready(var/forced = 0)
 	if (!forced)
-		if(!check_enemy_jobs())
+		if(!check_enemy_jobs(TRUE))
 			return 0
 	return ..()
 
@@ -42,7 +42,8 @@
 /datum/dynamic_ruleset/latejoin/infiltrator
 	name = "Syndicate Infiltrator"
 	role_category = /datum/role/traitor
-	protected_from_jobs = list("Security Officer", "Warden", "Head of Personnel", "Detective", "Head of Security", "Captain", "Merchant")
+	protected_from_jobs = list("Security Officer", "Warden", "Head of Personnel", "Detective", "Head of Security",
+							"Captain", "Merchant", "Chief Engineer", "Chief Medical Officer", "Research Director")
 	restricted_from_jobs = list("AI","Cyborg","Mobile MMI")
 	required_candidates = 1
 	weight = 7
@@ -131,8 +132,9 @@
 	newninja.Greet(GREET_DEFAULT)
 	newninja.OnPostSetup()
 	newninja.AnnounceObjectives()
-	spawn(5)
-		newninja.antag.current.ThrowAtStation()
+	spawn(1) //TODO - FIX THE NEED FOR THIS. CHECK PR, CHECK THE REVERTED COMMIT
+		if(!newninja.antag.current.ThrowAtStation())
+			newninja.antag.current.spawn_rand_maintenance()
 	return 1
 
 

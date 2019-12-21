@@ -108,6 +108,12 @@
 
 	var/wikiroute
 
+	// This datum represents all data that is exported to the statistics file at the end of the round.
+	// If you want to store faction-specific data as statistics, you'll need to define your own datum.
+	// See dynamic_stats.dm
+	var/datum/stat/role/stat_datum = null
+	var/datum/stat/role/stat_datum_type = /datum/stat/role
+
 /datum/role/New(var/datum/mind/M, var/datum/faction/fac=null, var/new_id, var/override = FALSE)
 	// Link faction.
 	faction=fac
@@ -127,6 +133,7 @@
 		plural_name="[name]s"
 
 	objectives.owner = M
+	stat_datum = new stat_datum_type()
 
 	return 1
 
@@ -348,6 +355,8 @@
 	if(objectives.objectives.len > 0)
 		text += "</ul>"
 
+	stat_collection.add_role(src, win)
+
 	return text
 
 /datum/role/proc/extraPanelButtons()
@@ -488,16 +497,11 @@
 /datum/role/proc/can_wear(var/obj/item/clothing/C)
 	return TRUE
 
+// What do they display on the player StatPanel ?
+/datum/role/proc/StatPanel()
+	return ""
+
 /////////////////////////////THESE ROLES SHOULD GET MOVED TO THEIR OWN FILES ONCE THEY'RE GETTING ELABORATED/////////////////////////
-
-
-//________________________________________________
-
-/datum/role/wizard_apprentice
-	name = WIZAPP
-	id = WIZAPP
-	special_role = WIZAPP
-	logo_state = "apprentice-logo"
 
 //________________________________________________
 
@@ -531,14 +535,6 @@
 	id = RESPONDER
 	special_role = RESPONDER
 	logo_state = "ERT_empty-logo"
-
-//________________________________________________
-
-/datum/role/vox_raider
-	name = VOXRAIDER
-	id = VOXRAIDER
-	special_role = VOXRAIDER
-	logo_state = "vox-logo"
 
 //________________________________________________
 
@@ -616,6 +612,7 @@ Once done, you will be able to interface with all systems, notably the onboard n
 	var/datum/ai_laws/laws = bot.laws
 	laws.malfunction()
 	bot.show_laws()
+	bot.throw_alert(SCREEN_ALARM_ROBOT_LAW, /obj/abstract/screen/alert/robot/newlaw)
 	return TRUE
 
 /datum/role/malfbot/Greet()
@@ -626,6 +623,19 @@ Once done, you will be able to interface with all systems, notably the onboard n
 	name = IMPLANTSLAVE
 	id = IMPLANTSLAVE
 	logo_state = "greytide-logo"
+
+/datum/role/greytide/Drop(silent = TRUE)
+	if (!silent)
+		antag.current.visible_message("<span class='userdanger'>[antag.current] briefly convulses!</span>" ,"<span class='userdanger'>Your loyalty to the greytide fades and vanishes. You are free of your actions again.</span>")
+	return ..()
+
+/datum/role/greytide/PostMindTransfer(var/mob/living/new_character, var/mob/living/old_character)
+	for(var/obj/item/weapon/implant/I in new_character)
+		if(istype(I, /obj/item/weapon/implant/traitor))
+			return
+	Drop()
+	return ..()
+
 
 /datum/role/greytide_leader
 	name = IMPLANTLEADER

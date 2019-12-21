@@ -313,9 +313,10 @@ var/global/list/damage_icon_parts = list()
 
 	//base icons
 	var/icon/face_standing	= new /icon('icons/mob/human_face.dmi',"bald_s")
-	var/hair_suffix = check_hidden_head_flags(HIDEHEADHAIR) ? "s2" : "s" // s2 = cropped icon
+	//to_chat(world, "Maskheadhair? [check_hidden_head_flags(MASKHEADHAIR)]")
+	var/hair_suffix = check_hidden_head_flags(MASKHEADHAIR) ? "s2" : "s" // s2 = cropped icon
 
-	if(my_appearance.f_style && !check_hidden_head_flags(HIDEBEARDHAIR))
+	if(my_appearance.f_style && !(check_hidden_flags(get_clothing_items(),HIDEBEARDHAIR))) //If the beard is hidden, don't draw it
 		var/datum/sprite_accessory/facial_hair_style = facial_hair_styles_list[my_appearance.f_style]
 		if((facial_hair_style) && (src.species.name in facial_hair_style.species_allowed))
 			var/icon/facial_s = new/icon("icon" = facial_hair_style.icon, "icon_state" = "[facial_hair_style.icon_state]_s")
@@ -325,7 +326,8 @@ var/global/list/damage_icon_parts = list()
 //		else
 			//warning("Invalid my_appearance.f_style for [species.name]: [my_appearance.f_style]")
 
-	if(my_appearance.h_style && !(src.head && (src.head.flags & HIDEHAIRCOMPLETELY)))
+	//to_chat(world, "Hideheadhair? [check_hidden_flags(get_clothing_items(),HIDEHEADHAIR)]")
+	if(my_appearance.h_style && !(check_hidden_flags(get_clothing_items(),HIDEHEADHAIR))) //If the hair is hidden, don't draw it
 		var/datum/sprite_accessory/hair_style = hair_styles_list[my_appearance.h_style]
 		if((hair_style) && (src.species.name in hair_style.species_allowed))
 			var/icon/hair_s = new/icon("icon" = hair_style.icon, "icon_state" = "[hair_style.icon_state]_[hair_suffix]")
@@ -333,7 +335,6 @@ var/global/list/damage_icon_parts = list()
 				hair_s.Blend(rgb(my_appearance.r_hair, my_appearance.g_hair, my_appearance.b_hair), ICON_ADD)
 			if(hair_style.additional_accessories)
 				hair_s.Blend(icon("icon" = hair_style.icon, "icon_state" = "[hair_style.icon_state]_acc"), ICON_OVERLAY)
-
 			face_standing.Blend(hair_s, ICON_OVERLAY)
 //		else
 			//warning("Invalid my_appearance.h_style for [species.name]: [my_appearance.h_style]")
@@ -393,14 +394,14 @@ var/global/list/damage_icon_parts = list()
 				O.overlays += image(icon = O.icon, icon_state = "lasereyes_s")
 				add_image = 1
 	if((M_RESIST_COLD in mutations) && (M_RESIST_HEAT in mutations))
-		if(!(src.species.name == "Vox") && !(src.species.name == "Skeletal Vox"))	
+		if(!(src.species.name == "Vox") && !(src.species.name == "Skeletal Vox"))
 			//standing.underlays	-= "cold[fat]_s"
 			//standing.underlays	-= "fire[fat]_s"
 			//standing.underlays	+= "coldfire[fat]_s"
 			O.underlays	-= "cold[fat]_s"
 			O.underlays	-= "fire[fat]_s"
 			O.underlays	+= "coldfire[fat]_s"
-		else if((src.species.name == "Vox") || (src.species.name == "Skeletal Vox"))	
+		else if((src.species.name == "Vox") || (src.species.name == "Skeletal Vox"))
 			O.underlays -= "coldvox_s"
 			O.underlays	-= "firevox_s"
 			O.underlays	+= "coldfirevox_s"
@@ -534,8 +535,11 @@ var/global/list/damage_icon_parts = list()
 
 	overlays -= obj_overlays[UNIFORM_LAYER]
 	if(!w_uniform)
-		// Automatically drop anything in store / id / belt if you're not wearing a uniform.	//CHECK IF NECESARRY
-		for( var/obj/item/thing in list(r_store, l_store, wear_id, belt) )						//
+		var/list/drop_items = list(r_store, l_store, wear_id)
+		if(!isbelt(belt))
+			drop_items.Add(belt)
+		// Automatically drop anything in store / id if you're not wearing a uniform.	//CHECK IF NECESARRY
+		for( var/obj/item/thing in drop_items)						//
 			if(thing)																			//
 				u_equip(thing,1)																//
 				if (client)																		//
@@ -1128,7 +1132,7 @@ var/global/list/damage_icon_parts = list()
 		O.pixel_x = species.inventory_offsets["[slot_handcuffed]"]["pixel_x"] * PIXEL_MULTIPLIER
 		O.pixel_y = species.inventory_offsets["[slot_handcuffed]"]["pixel_y"] * PIXEL_MULTIPLIER
 		obj_to_plane_overlay(O,HANDCUFF_LAYER)
-		
+
 	if(update_icons)
 		update_icons()
 

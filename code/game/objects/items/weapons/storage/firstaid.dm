@@ -11,6 +11,7 @@
 /obj/item/weapon/storage/firstaid
 	name = "first-aid kit"
 	desc = "It's an emergency medical kit for those serious boo-boos."
+	inhand_states = list("left_hand" = 'icons/mob/in-hand/left/firstaid-kits.dmi', "right_hand" = 'icons/mob/in-hand/right/firstaid-kits.dmi')
 	icon_state = "firstaid"
 	throw_speed = 2
 	throw_range = 8
@@ -159,7 +160,9 @@
 	colour_overlay = image('icons/obj/chemical.dmi',"bottle_colour")
 	overlays += colour_overlay
 
-/obj/item/weapon/storage/pill_bottle/AltClick()
+/obj/item/weapon/storage/pill_bottle/CtrlClick()
+	if(isturf(loc))
+		return ..()
 	if(!usr.isUnconscious() && Adjacent(usr))
 		change()
 		return

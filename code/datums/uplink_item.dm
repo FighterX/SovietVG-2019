@@ -260,7 +260,7 @@ var/list/uplink_items = list()
 /datum/uplink_item/dangerous/dude_bombs_lmao
 	name = "Modified Tank Transfer Valve"
 	desc = "A small, expensive and powerful plasma-oxygen explosive. Handle very carefully."
-	item = /obj/effect/spawner/newbomb
+	item = /obj/effect/spawner/newbomb/timer
 	cost = 25
 	jobs_exclusive = list("Nuclear Operative")
 	refundable = TRUE
@@ -304,9 +304,9 @@ var/list/uplink_items = list()
 	cost = 6
 
 /datum/uplink_item/stealthy_weapons/knuckles
-	name = "Brass Knuckles"
-	desc = "A pair of metal knuckles that can be worn on your hands, increasing damage done by your punches."
-	item = /obj/item/clothing/gloves/knuckles
+	name = "Spiked Knuckles"
+	desc = "A pair of spiked metal knuckles that can be worn on your hands, increasing damage done by your punches."
+	item = /obj/item/clothing/gloves/knuckles/spiked
 	cost = 2
 
 // STEALTHY TOOLS
@@ -791,16 +791,32 @@ var/list/uplink_items = list()
 	name = "Pickpocket's Gloves"
 	desc = "A pair of sleek gloves to aid in pickpocketing, while wearing these you can sneakily strip any item without the other person being alerted. Pickpocketed items will also be put into your hand rather than fall to the ground."
 	item = /obj/item/clothing/gloves/black/thief
-	cost = 8
-	discounted_cost = 6
+	cost = 4
+	discounted_cost = 2
+	jobs_with_discount = list("Assistant")
+
+/datum/uplink_item/jobspecific/pickpocketglovestorage
+	name = "Pickpocket's Gloves with Storage"
+	desc = "A pair of sleek gloves to aid in pickpocketing, these come with their own small storage where pickpocketed items will automatically be placed in if there is room"
+	item = /obj/item/clothing/gloves/black/thief/storage
+	cost = 7
+	discounted_cost = 4
 	jobs_with_discount = list("Assistant")
 
 /datum/uplink_item/jobspecific/greytide
-	name = "Greytide Implant"
+	name = "Greytide Implants"
 	desc = "A box containing two greytide implanters that when injected into another person makes them loyal to the greytide and your cause, unless they're already implanted by someone else. Loyalty ends if he or she no longer has the implant. CAUTION: WILL NOT WORK ON SUBJECTS WITH NT LOYALTY IMPLANTS. Now with disguised sechud sunglasses. These will have limited access until you can get your hands on some containing security codes."
 	item = /obj/item/weapon/storage/box/syndie_kit/greytide
 	cost = 20
 	discounted_cost = 14
+	jobs_with_discount = list("Assistant")
+
+/datum/uplink_item/jobspecific/cheaptide
+	name = "Cheaptide Implant"
+	desc = "A box containing one greytide implanter that when injected into another person makes them loyal to the greytide and your cause, unless they're already implanted by someone else. Loyalty ends if he or she no longer has the implant. CAUTION: WILL NOT WORK ON SUBJECTS WITH NT LOYALTY IMPLANTS. Now with disguised sechud sunglasses. These will have limited access until you can get your hands on some containing security codes."
+	item = /obj/item/weapon/storage/box/syndie_kit/cheaptide
+	cost = 12
+	discounted_cost = 8
 	jobs_with_discount = list("Assistant")
 
 /datum/uplink_item/jobspecific/drunkbullets
@@ -938,3 +954,10 @@ var/list/uplink_items = list()
 	discounted_cost = 2
 	jobs_with_discount = list("Librarian", "Chaplain")
 
+/datum/uplink_item/jobspecific/powercreeper_packet
+	name = "Powercreep Packet"
+	desc = "A packet that creates a dangerous mutated version of kudzu. The vines shock people and connect themselves to any cables near them."
+	item = /obj/item/powercreeper_packet
+	cost = 16
+	discounted_cost = 10
+	jobs_with_discount = list("Botanist", "Station Engineer", "Chief Engineer")

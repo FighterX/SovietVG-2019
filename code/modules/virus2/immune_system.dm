@@ -24,7 +24,7 @@
 /datum/immune_system/New(var/mob/living/L)
 	..()
 	if (!L)
-		del(src)
+		qdel(src)
 		return
 	body = L
 
@@ -46,6 +46,12 @@
 					antibodies[antibody] += rand(12,15)
 				if (antibody == ANTIGEN_RH && findtext(body.dna.b_type,"+"))
 					antibodies[antibody] += rand(12,15)
+
+/datum/immune_system/Destroy()
+	if(body)
+		body.immune_system = null
+		body = null
+	..()
 
 /datum/immune_system/proc/transfer_to(var/mob/living/L)
 	if (!L.immune_system)

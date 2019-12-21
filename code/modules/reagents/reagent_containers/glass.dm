@@ -81,7 +81,7 @@
 	if (is_type_in_list(target, can_be_placed_into))
 		return
 
-	if(ishuman(target)) //Splashing handled in attack now
+	if(ishuman(target) || iscorgi(target)) //Splashing handled in attack now
 		return
 
 	var/transfer_result = transfer(target, user, splashable_units = -1) // Potentially splash with everything inside
@@ -276,6 +276,12 @@
 /obj/item/weapon/reagent_containers/glass/beaker/vial/mop_act(obj/item/weapon/mop/M, mob/user)
 	return 0
 
+/obj/item/weapon/reagent_containers/glass/beaker/vial/on_reagent_change()
+	..()
+	if (istype(loc,/obj/item/weapon/storage/fancy/vials) || istype(loc,/obj/item/weapon/storage/lockbox/vials))
+		var/obj/item/weapon/storage/S = loc
+		S.update_icon()
+
 /obj/item/weapon/reagent_containers/glass/beaker/vial/uranium/New()
 	..()
 	reagents.add_reagent(URANIUM, 25)
@@ -299,6 +305,29 @@
 /obj/item/weapon/reagent_containers/glass/beaker/erlenmeyer/sodawater/New()
 	..()
 	reagents.add_reagent(SODAWATER, 30)
+
+/obj/item/weapon/reagent_containers/glass/beaker/large/fresh_clone_cryomix/New()
+	..()
+	reagents.add_reagent(CLONEXADONE, 40)
+	reagents.add_reagent(CRYOXADONE, 40)
+	reagents.add_reagent(ALKYSINE, 15)
+	reagents.add_reagent(RYETALYN, 5)
+
+/obj/item/weapon/reagent_containers/glass/beaker/large/old_cryomix/New()
+	..()
+	reagents.add_reagent(CLONEXADONE, 20)
+	reagents.add_reagent(CRYOXADONE, 20)
+	reagents.add_reagent(BICARIDINE, 10)
+	reagents.add_reagent(ANTI_TOXIN, 10)
+	reagents.add_reagent(KELOTANE, 10)
+	reagents.add_reagent(DERMALINE, 10)
+	reagents.add_reagent(ALKYSINE, 10)
+	reagents.add_reagent(DEXALINP, 5)
+	reagents.add_reagent(RYETALYN, 5)
+
+/obj/item/weapon/reagent_containers/glass/beaker/large/armstrong_cryomix/New()
+	..()
+	reagents.add_reagent(MEDNANOBOTS, 100)
 
 /obj/item/weapon/reagent_containers/glass/beaker/cryoxadone/New()
 	..()

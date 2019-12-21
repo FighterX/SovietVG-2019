@@ -638,7 +638,7 @@ var/global/list/loopModeNames=list(
 		if(isobserver(usr) && !canGhostWrite(usr,src,""))
 			to_chat(usr, "<span class='warning'>You can't do that.</span>")
 			return
-		selected_song=Clamp(text2num(href_list["song"]),1,playlist.len)
+		selected_song=clamp(text2num(href_list["song"]),1,playlist.len)
 		if(isAdminGhost(usr))
 			var/datum/song_info/song=playlist[selected_song]
 			log_adminghost("[key_name_admin(usr)] changed [src] next song to #[selected_song] ([song.display()]) at [formatJumpTo(src)]")
@@ -770,6 +770,7 @@ var/global/list/loopModeNames=list(
 	playlist_id="bar"
 	// Must be defined on your server.
 	playlists=list(
+		"lilslugger" = "Battle of Lil Slugger",
 		"bar"  = "Bar Mix",
 		"depresso" ="Depresso",
 		"electronica" = "Electronica",
@@ -781,6 +782,15 @@ var/global/list/loopModeNames=list(
 		"security" = "Security",
 		"upbeathypedancejam" = "Dance"
 	)
+
+/obj/machinery/media/jukebox/bar/New()
+	..()
+	var/MM = text2num(time2text(world.timeofday, "MM"))
+	if(MM == 10)
+		playlists["halloween"] = "Halloween"
+	if(MM == 12)
+		playlists["christmas"] = "Christmas Jingles"
+
 
 // Relaxing elevator music~
 /obj/machinery/media/jukebox/dj
@@ -822,6 +832,7 @@ var/global/list/loopModeNames=list(
 	playlist_id="bar"
 	// Must be defined on your server.
 	playlists=list(
+		"lilslugger" = "Battle of Lil' Slugger",
 		"bar"  = "Bar Mix",
 		"depresso" ="Depresso",
 		"electronica" = "Electronica",
@@ -837,12 +848,14 @@ var/global/list/loopModeNames=list(
 		"upbeathypedancejam" = "Dance",
 		"thunderdome" = "Thunderdome",
 		"emagged" ="Syndicate Mix",
-		"endgame" = "Apocalypse",
-		"SCOTLANDFOREVER"= "Highlander",
 		"shuttle"= "Shuttle",
+		"halloween" = "Halloween",
+		"christmas" = "Christmas Jingles",
+		"endgame" = "Apocalypse",
 		"nukesquad" = "Syndicate Assault",
 		"malfdelta"= "Silicon Assault",
 		"bomberman" = "Bomberman",
+		"SCOTLANDFOREVER"= "Highlander",
 		"echoes" = "Echoes"
 	)
 
@@ -1050,5 +1063,18 @@ var/global/list/loopModeNames=list(
 	formatted = "Dance"
 /obj/item/weapon/vinyl/scotland
 	name = "nanovinyl - highlander"
+	desc = "Oh no."
 	unformatted = "SCOTLANDFOREVER"
 	formatted = "Highlander"
+/obj/item/weapon/vinyl/halloween
+	name = "nanovinyl - halloween"
+	unformatted = "halloween"
+	formatted = "Halloween"
+/obj/item/weapon/vinyl/slugger
+	name = "nanovynil - slugger"
+	unformatted = "lilslugger"
+	formatted = "Battle of Lil Slugger"
+obj/item/weapon/vinyl/christmas
+	name = "nanovynil - christmas"
+	unformatted = "christmas"
+	formatted = "Christmas Jingles"

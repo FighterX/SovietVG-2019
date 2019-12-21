@@ -18,6 +18,9 @@
 
 	immune_system = new (src)
 
+	on_resist = new(owner = src)
+	on_life = new(owner = src)
+
 /mob/living/Destroy()
 	for(var/mob/living/silicon/robot/mommi/MoMMI in player_list)
 		for(var/image/I in static_overlays)
@@ -37,6 +40,18 @@
 	if(BrainContainer)
 		qdel(BrainContainer)
 		BrainContainer = null
+
+	if(immune_system)
+		qdel(immune_system)
+		immune_system = null
+
+	if(on_resist)
+		qdel(on_resist)
+		on_resist = null
+
+	if(on_life)
+		qdel(on_life)
+		on_life = null
 
 	. = ..()
 
@@ -790,18 +805,6 @@ Thanks.
 /mob/living
 	var/event/on_resist
 
-/mob/living/New()
-	. = ..()
-	on_resist = new(owner = src)
-	on_life = new(owner = src)
-
-/mob/living/Destroy()
-	. = ..()
-	qdel(on_resist)
-	on_resist = null
-	qdel(on_life)
-	on_life = null
-
 /mob/living/verb/resist()
 	set name = "Resist"
 	set category = "IC"
@@ -811,7 +814,7 @@ Thanks.
 
 	INVOKE_EVENT(on_resist, list())
 
-	delayNext(DELAY_ALL,20) // Attack, Move, and Special.
+	delayNextSpecial(10) // Special delay, a cooldown to prevent spamming too much.
 
 	var/mob/living/L = usr
 
@@ -819,7 +822,6 @@ Thanks.
 	var/obj/item/weapon/subspacetunneler/inside_tunneler = get_holder_of_type(L, /obj/item/weapon/subspacetunneler)
 	if(inside_tunneler)
 		var/breakout_time = 0.5 //30 seconds by default
-		L.delayNext(DELAY_ALL,100)
 		L.visible_message("<span class='danger'>\The [inside_tunneler]'s storage bin shudders.</span>","<span class='warning'>You wander through subspace, looking for a way out (this will take about [breakout_time * 60] seconds).</span>")
 		spawn(0)
 			if(do_after(usr,src,breakout_time * 60 * 10)) //minutes * 60seconds * 10deciseconds
@@ -937,7 +939,7 @@ Thanks.
 			L.visible_message("<span class='danger'>[L] resists!</span>")
 
 
-	if(L.locked_to && L.special_delayer.blocked())
+	if(L.locked_to && !L.isUnconscious())
 		//unbuckling yourself
 		if(istype(L.locked_to, /obj/structure/bed))
 			var/obj/structure/bed/B = L.locked_to
@@ -946,8 +948,6 @@ Thanks.
 				if(G.open)
 					G.manual_unbuckle(L)
 				else
-					L.delayNextAttack(100)
-					L.delayNextSpecial(100)
 					L.visible_message("<span class='warning'>\The [L] attempts to dislodge \the [G]'s stocks!</span>",
 									  "<span class='warning'>You attempt to dislodge \the [G]'s stocks (this will take around thirty seconds).</span>",
 									  self_drugged_message="<span class='warning'>You attempt to chew through the wooden stocks of \the [G] (this will take a while).</span>")
@@ -970,8 +970,6 @@ Thanks.
 			else if(iscarbon(L))
 				var/mob/living/carbon/C = L
 				if(C.handcuffed)
-					C.delayNextAttack(50)
-					C.delayNextSpecial(50)
 					if(isalienadult(C) || (M_HULK in usr.mutations))
 						C.visible_message("<span class='warning'>[C] is trying to forcefully unbuckle!</span>",
 						                   "<span class='warning'>You attempt to forcefully unbuckle (This will take around five seconds).</span>")
@@ -1025,7 +1023,6 @@ Thanks.
 					return //closed but not welded...
 
 		//okay, so the closet is either welded or locked... resist!!!
-		L.delayNext(DELAY_ALL,100)
 		L.visible_message("<span class='danger'>The [C] begins to shake violenty!</span>",
 						  "<span class='warning'>You lean on the back of [C] and start pushing the door open (this will take about [breakout_time] minutes).</span>")
 		spawn(0)
@@ -1078,7 +1075,6 @@ Thanks.
 	if(src.loc && istype(src.loc, /obj/item/mecha_parts/mecha_equipment/tool/jail))
 		var/breakout_time = 30 SECONDS
 		var/obj/item/mecha_parts/mecha_equipment/tool/jail/jailcell = src.loc
-		L.delayNext(DELAY_ALL,100)
 		L.visible_message("<span class='danger'>One of \the [src.loc]'s cells rattles.</span>","<span class='warning'>You press against the lid of \the [src.loc] and attempt to pop it open (this will take about [breakout_time/10] seconds).</span>")
 		spawn(0)
 			if(do_after(usr,src,breakout_time)) //minutes * 60seconds * 10deciseconds
@@ -1089,7 +1085,7 @@ Thanks.
 				jailcell.break_out(L)
 		return
 
-	if(L.loc && istype(L.loc, /obj/structure/inflatable/shelter))
+	if((L.loc && istype(L.loc, /obj/structure/inflatable/shelter)) || (L.loc && istype(L.loc, /obj/structure/reagent_dispensers/cauldron/barrel)))
 		var/obj/O = L.loc
 		O.container_resist(L)
 
@@ -1116,8 +1112,7 @@ Thanks.
 			return
 
 	//breaking out of handcuffs
-		if(CM.handcuffed && CM.canmove && CM.special_delayer.blocked())
-			CM.delayNext(DELAY_ALL,100)
+		if(CM.handcuffed && CM.canmove)
 			if(isalienadult(CM) || (M_HULK in usr.mutations))//Don't want to do a lot of logic gating here.
 				CM.visible_message("<span class='danger'>[CM] is trying to break the handcuffs!</span>",
 								   "<span class='warning'>You attempt to break your handcuffs. (This will take around five seconds and you will need to stand still).</span>")
@@ -1156,8 +1151,7 @@ Thanks.
 						CM.simple_message("<span class='warning'>Your attempt to remove \the [HC] was interrupted.</span>",
 							"<span class='warning'>Your attempt to regain control of your hands was interrupted. Damn it!</span>")
 
-		else if(CM.legcuffed && CM.canmove && CM.special_delayer.blocked())
-			CM.delayNext(DELAY_ALL,100)
+		else if(CM.legcuffed && CM.canmove)
 			if(isalienadult(CM) || (M_HULK in usr.mutations))//Don't want to do a lot of logic gating here.
 				CM.visible_message("<span class='danger'>[CM] is trying to break the legcuffs!</span>",
 								   "<span class='warning'>You attempt to break your legcuffs. (This will take around five seconds and you need to stand still).</span>")
@@ -1191,8 +1185,7 @@ Thanks.
 						CM.update_inv_legcuffed()
 					else
 						to_chat(CM, "<span class='warning'>Your unlegcuffing attempt was interrupted.</span>")
-		else if(CM.mutual_handcuffs && CM.canmove && CM.special_delayer.blocked())
-			CM.delayNext(DELAY_ALL,100)
+		else if(CM.mutual_handcuffs && CM.canmove)
 			if(isalienadult(CM) || (M_HULK in usr.mutations))//Don't want to do a lot of logic gating here.
 				CM.visible_message("<span class='danger'>[CM] is trying to break the handcuffs!</span>",
 								   "<span class='warning'>You attempt to break your handcuffs. (This will take around five seconds and you will need to stand still).</span>")
@@ -1425,7 +1418,7 @@ Thanks.
 		for (var/ID in virus2)
 			var/datum/disease2/disease/D = virus2[ID]
 			if (D.spread & SPREAD_BLOOD)
-				M.infect_disease2(D,1,"(Butchered, from [src])")
+				M.infect_disease2(D,1,"(Butchered, from [src])",0)
 
 	var/obj/item/weapon/reagent_containers/food/snacks/meat/animal/A = M
 
@@ -1769,8 +1762,7 @@ Thanks.
 		if(istype(src,/mob/living/carbon/human))
 			var/mob/living/carbon/human/H=src
 			throw_mult = H.species.throw_mult
-			if((M_HULK in H.mutations) || (M_STRONG in H.mutations))
-				throw_mult+=0.5
+			throw_mult += (H.get_strength()-1)/2 //For each level of strength above 1, add 0.5
 		item.throw_at(target, item.throw_range*throw_mult, item.throw_speed*throw_mult)
 		return THREW_SOMETHING
 
@@ -1898,16 +1890,17 @@ Thanks.
 
 ///////////////////////DISEASE STUFF///////////////////////////////////////////////////////////////////
 
-//For when we've already gone through clothing protections
-/mob/living/proc/assume_contact_diseases(var/list/disease_list,var/atom/source,var/bleeding=0)
+//Blocked is whether clothing prevented the spread of contact/blood
+/mob/living/proc/assume_contact_diseases(var/list/disease_list,var/atom/source,var/blocked=0,var/bleeding=0)
 	if (istype(disease_list) && disease_list.len > 0)
 		for(var/ID in disease_list)
 			var/datum/disease2/disease/V = disease_list[ID]
-			if (V.spread & SPREAD_CONTACT)
+			if(!blocked && V.spread & SPREAD_CONTACT)
 				infect_disease2(V, notes="(Contact, from [source])")
-			else if (bleeding && (V.spread & SPREAD_BLOOD))
+			else if(suitable_colony() && V.spread & SPREAD_COLONY)
+				infect_disease2(V, notes="(Colonized, from [source])")
+			else if(!blocked && bleeding && (V.spread & SPREAD_BLOOD))
 				infect_disease2(V, notes="(Blood, from [source])")
-
 
 //Called in Life() by humans (in handle_virus_updates.dm), monkeys and mice
 /mob/living/proc/find_nearby_disease()//only tries to find Contact and Blood spread diseases. Airborne ones are handled by breath_airborne_diseases()
@@ -1938,31 +1931,28 @@ Thanks.
 		block = check_contact_sterility(FEET)
 		bleeding = check_bodypart_bleeding(FEET)
 
-	if (!block)
-		var/list/viral_cleanable_types = list(
-			/obj/effect/decal/cleanable/blood,
-			/obj/effect/decal/cleanable/mucus,
-			/obj/effect/decal/cleanable/vomit,
-			)
+	var/list/viral_cleanable_types = list(
+		/obj/effect/decal/cleanable/blood,
+		/obj/effect/decal/cleanable/mucus,
+		/obj/effect/decal/cleanable/vomit,
+		)
 
-		for(var/obj/effect/decal/cleanable/C in T)
-			if (is_type_in_list(C,viral_cleanable_types))
-				assume_contact_diseases(C.virus2,C,bleeding)
+	for(var/obj/effect/decal/cleanable/C in T)
+		if (is_type_in_list(C,viral_cleanable_types))
+			assume_contact_diseases(C.virus2,C,block,bleeding)
 
-		for(var/obj/effect/rune/R in T)
-			assume_contact_diseases(R.virus2,R,bleeding)
+	for(var/obj/effect/rune/R in T)
+		assume_contact_diseases(R.virus2,R,block,bleeding)
 	return 0
 
 //This one is used for one-way infections, such as getting splashed with someone's blood due to clobbering them to death
 /mob/living/proc/oneway_contact_diseases(var/mob/living/L,var/block=0,var/bleeding=0)
-	if (!block)
-		assume_contact_diseases(L.virus2,L,bleeding)
+	assume_contact_diseases(L.virus2,L,block,bleeding)
 
 //This one is used for two-ways infections, such as hand-shakes, hugs, punches, people bumping into each others, etc
 /mob/living/proc/share_contact_diseases(var/mob/living/L,var/block=0,var/bleeding=0)
-	if (!block)
-		L.assume_contact_diseases(virus2,src,bleeding)
-		assume_contact_diseases(L.virus2,L,bleeding)
+	L.assume_contact_diseases(virus2,src,block,bleeding)
+	assume_contact_diseases(L.virus2,L,block,bleeding)
 
 //Called in Life() by humans (in handle_breath.dm), monkeys and mice
 /mob/living/proc/breath_airborne_diseases()//only tries to find Airborne spread diseases. Blood and Contact ones are handled by find_nearby_disease()
@@ -2040,14 +2030,8 @@ Thanks.
 			CreateBlobDisease(source.looks)
 		var/datum/disease2/disease/D = blob_diseases[source.looks]
 
-		var/chance_to_infect = 100
-		if (check_contact_sterility(FULL_TORSO))//For simplicity's sake (for once), let's just assume that the blob strikes the torso.
-			chance_to_infect = 10//Even with perfect protection, those spores might get to you.
-		if (check_bodypart_bleeding(FULL_TORSO))
-			chance_to_infect = min(100, chance_to_infect + 10)
-
-		if (prob(chance_to_infect))
-			infect_disease2(D, notes="(Blob, from [source])")//still 5% chance to fail infection
+		if (!check_contact_sterility(FULL_TORSO))//For simplicity's sake (for once), let's just assume that the blob strikes the torso.
+			infect_disease2(D, notes="(Blob, from [source])")
 
 	..()
 

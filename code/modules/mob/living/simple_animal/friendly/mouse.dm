@@ -1,5 +1,5 @@
 #define MOUSETFAT 1000
-#define MOUSEFAT 600
+#define MOUSEFAT 700
 #define MOUSESTARVE 25
 #define MOUSEHUNGRY 100
 #define MOUSEMOVECOST 0.5
@@ -21,6 +21,7 @@
 	emote_hear = list("squeeks","squeaks","squiks")
 	emote_see = list("runs in a circle", "shakes", "scritches at something")
 	pass_flags = PASSTABLE
+	flags = HEAR_ALWAYS | PROXMOVE
 	speak_chance = 1
 	turns_per_move = 5
 	see_in_dark = 6
@@ -45,6 +46,8 @@
 	var/is_fat = 0
 	var/can_chew_wires = 0
 	var/splat = 0
+	var/infectable = 0
+	var/nutrition_loss_mod = 1
 
 /mob/living/simple_animal/mouse/New()
 	..()
@@ -59,7 +62,7 @@
 		MaintInfection()
 
 /mob/living/simple_animal/mouse/can_be_infected()
-	return 1
+	return infectable
 
 /mob/living/simple_animal/mouse/Life()
 	if(timestopped)
@@ -97,9 +100,10 @@
 		is_fat = 0
 		speed = initial(speed)
 		meat_amount = size //What it is on living/New(),
-	if(nutrition <= MOUSESTARVE && prob(5) && client)
-		to_chat(src, "<span class = 'warning'>You are starving!</span>")
-		health -= 1
+	if(nutrition <= MOUSESTARVE && client)
+		speed = 10
+		if(prob(1))
+			to_chat(src, "<span class = 'warning'>You are starving!</span>")
 	if(nutrition <= MOUSEHUNGRY && nutrition > MOUSESTARVE)
 		speed = 3
 		if(prob(5))
@@ -107,8 +111,7 @@
 
 	handle_body_temperature()//I bestow upon mice the gift of thermoregulation, so they can handle the fever caused by disease.
 
-	//------------------------DISEASE STUFF--------------------------------------------------------
-	if(!(status_flags & GODMODE))
+	if(!(status_flags & GODMODE) && can_be_infected() && !isDead())
 		if(!locked_to || !istype(locked_to,/obj/item/critter_cage))//cages isolate from contact and airborne diseases
 			find_nearby_disease()//getting diseases from blood/mucus/vomit splatters and open dishes
 
@@ -120,7 +123,6 @@
 					share_contact_diseases(M)//Mice automatically share contact diseases among themselves
 
 		activate_diseases()//however cages don't prevent diseases from activating
-	//---------------------------------------------------------------------------------------------
 
 	if(!isUnconscious())
 		var/list/can_see = view(src, 5) //Decent radius, not too large so they're attracted across rooms, but large enough to attract them to mousetraps
@@ -141,7 +143,7 @@
 			else if (prob(25))
 				dir = pick(cardinal - dir)
 
-		if(!food_target && (!client || nutrition <= MOUSEHUNGRY)) //Regular mice will be moved towards food, mice with a client won't be moved unless they're desperate
+		if(!food_target && !client) //Regular mice will be moved towards food, mice with a client won't be
 			for(var/obj/item/weapon/reagent_containers/food/snacks/C in can_see)
 				food_target = C
 				break
@@ -185,7 +187,7 @@
 					//spread_disease_to(src,M, "Airborne") //Spreads it to humans, mice, and monkeys
 
 */
-		nutrition = max(0, nutrition - MOUSESTANDCOST)
+		nutrition = max(0, nutrition - (MOUSESTANDCOST * nutrition_loss_mod))
 
 
 
@@ -219,7 +221,7 @@
 	var/multiplier = 1
 	if(nutrition >= MOUSEFAT) //Fat mice lose nutrition faster through movement
 		multiplier = 2.5
-	nutrition = max(0, nutrition - MOUSEMOVECOST*multiplier)
+	nutrition = max(0, nutrition - (MOUSEMOVECOST*multiplier*nutrition_loss_mod))
 
 
 /mob/living/simple_animal/mouse/proc/initIcons()
@@ -231,8 +233,8 @@
 	icon_eat = "mouse_[_color]_eat"
 
 /mob/living/simple_animal/mouse/proc/MaintInfection()
-	var/virus_choice = pick(subtypesof(/datum/disease2/disease))
-	var/datum/disease2/disease/D = new virus_choice
+	infectable = TRUE
+	var/datum/disease2/disease/D = get_random_weighted_disease(WMOUSE)
 
 	var/list/anti = list(
 		ANTIGEN_BLOOD	= 1,
@@ -251,7 +253,7 @@
 	D.origin = "Maintenance Mouse"
 
 	D.spread = SPREAD_BLOOD
-	if (prob(60))
+	if (prob(40))
 		D.spread |= SPREAD_CONTACT
 
 	D.makerandom(list(40,60),list(10,80),anti,bad,null)
@@ -260,6 +262,8 @@
 
 /mob/living/simple_animal/mouse/unarmed_attack_mob(var/mob/living/target)
 	..()
+	if(!can_be_infected())
+		return
 	var/block = 0
 	var/bleeding = 0
 
@@ -335,67 +339,35 @@
 	if (plane != HIDING_MOB_PLANE)
 		plane = HIDING_MOB_PLANE
 		to_chat(src, text("<span class='notice'>You are now hiding.</span>"))
-		/*
-		for(var/mob/O in oviewers(src, null))
-			if ((O.client && !( O.blinded )))
-				to_chat(O, text("<B>[] scurries to the ground!</B>", src))
-		*/
 	else
 		plane = MOB_PLANE
 		to_chat(src, text("<span class='notice'>You have stopped hiding.</span>"))
-		/*
-		for(var/mob/O in oviewers(src, null))
-			if ((O.client && !( O.blinded )))
-				to_chat(O, text("[] slowly peaks up from the ground...", src))
-		*/
-
-//make mice fit under tables etc? this was hacky, and not working
-/*
-/mob/living/simple_animal/mouse/Move(var/dir)
-
-	var/turf/target_turf = get_step(src,dir)
-	//CanReachThrough(src.loc, target_turf, src)
-	var/can_fit_under = 0
-	if(target_turf.ZCross(get_turf(src),1))
-		can_fit_under = 1
-
-	..(dir)
-	if(can_fit_under)
-		src.forceMove(target_turf)
-	for(var/d in cardinal)
-		var/turf/O = get_step(T,d)
-		//Simple pass check.
-		if(O.ZCross(T, 1) && !(O in open) && !(O in closed) && O in possibles)
-			open += O
-			*/
-
-///mob/living/simple_animal/mouse/restrained() //Hotfix to stop mice from doing things with MouseDrop
-//	return 1
 
 /mob/living/simple_animal/mouse/scoop_up(var/mob/living/M)
-	if (..())
+	if (..() && can_be_infected())
 		var/block = M.check_contact_sterility(HANDS)
 		var/bleeding = M.check_bodypart_bleeding(HANDS)
 		share_contact_diseases(M,block,bleeding)
 
 /mob/living/simple_animal/mouse/Crossed(AM as mob|obj)
-	if( ishuman(AM) )
+	if(ishuman(AM) && can_be_infected())
 		var/mob/living/carbon/human/M = AM
-		if(!stat)
-			to_chat(M, "<span class='notice'>[bicon(src)] Squeek!</span>")
-			M << 'sound/effects/mousesqueek.ogg'
+		if (M.on_foot())
+			if(!stat)
+				to_chat(M, "<span class='notice'>[bicon(src)] Squeek!</span>")
+				M << 'sound/effects/mousesqueek.ogg'
 
-		var/block = 0
-		var/bleeding = 0
-		if (lying)
-			block = M.check_contact_sterility(FULL_TORSO)
-			bleeding = M.check_bodypart_bleeding(FULL_TORSO)
-		else
-			block = M.check_contact_sterility(FEET)
-			bleeding = M.check_bodypart_bleeding(FEET)
+			var/block = 0
+			var/bleeding = 0
+			if (lying)
+				block = M.check_contact_sterility(FULL_TORSO)
+				bleeding = M.check_bodypart_bleeding(FULL_TORSO)
+			else
+				block = M.check_contact_sterility(FEET)
+				bleeding = M.check_bodypart_bleeding(FEET)
 
-		//sharing diseases with people stepping on us
-		share_contact_diseases(M,block,bleeding)
+			//sharing diseases with people stepping on us
+			share_contact_diseases(M,block,bleeding)
 	..()
 
 /mob/living/simple_animal/mouse/death(var/gibbed = FALSE)
@@ -446,6 +418,10 @@
 	_color = "black"
 	icon_state = "mouse_black"
 
+//Selects a 1 of 3 random colours.
+/mob/living/simple_animal/mouse/common
+	_color = null
+
 /mob/living/simple_animal/mouse/common/New()
 	..()
 	// Mice IDs
@@ -462,7 +438,6 @@
 
 /mob/living/simple_animal/mouse/balbc
 	name = "laboratory mouse"
-	namenumbers = FALSE
 	desc = "A lab mouse of the BALB/c strain (Mus Musculus). Very docile, though they become easily anxious."
 	_color = "balbc"
 	icon_state = "mouse_balbc"
@@ -470,6 +445,7 @@
 	response_help  = "pets"
 	response_disarm = "gently pushes aside"
 	response_harm   = "splats"
+	infectable = TRUE
 
 /mob/living/simple_animal/mouse/balbc/New()
 	..()
@@ -488,6 +464,8 @@
 		"The Brain",
 		"Nibbles",
 		"Snuffles",
+		"Sugar",
+		"Jen",
 		)
 	real_name = name
 
@@ -498,6 +476,7 @@
 	_color = "plague"
 	desc = "It's a small, disease-ridden rodent."
 	icon_state = "mouse_plague"
+	infectable = TRUE
 
 //TOM IS ALIVE! SQUEEEEEEEE~K :)
 /mob/living/simple_animal/mouse/Tom
@@ -537,9 +516,6 @@
 	mutations = list(M_NO_SHOCK)
 
 /mob/living/simple_animal/mouse/mouse_op/death(var/gibbed = FALSE)
-	..()
+	..(TRUE)
 	if(gibbed == FALSE)
 		src.gib()
-
-/mob/living/simple_animal/mouse/mouse_op/can_be_infected()
-	return 0

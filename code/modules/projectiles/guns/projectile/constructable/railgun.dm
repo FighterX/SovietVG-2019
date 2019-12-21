@@ -155,6 +155,9 @@
 			if (C.string_attached)
 				to_chat(user, "Remove the string from \the [C] first.")
 				return
+			if (C.siemens_coefficient == 0)
+				to_chat(user, "That [C.name] won't work.")
+				return
 			else
 				C.forceMove(src)
 				loadedammo = C
@@ -287,6 +290,22 @@
 	loadedammo.forceMove(user.loc)
 	loadedammo.throw_at(target,distance,speed)
 	loadedammo = null
+
+/obj/item/weapon/gun/projectile/railgun/preloaded
+	var/ammotype = /obj/item/weapon/coin/iron
+	var/capacitortype = /obj/item/weapon/stock_parts/capacitor/adv/super
+	
+/obj/item/weapon/gun/projectile/railgun/preloaded/New()
+	..()
+	loadedassembly = new /obj/item/weapon/rail_assembly(src)
+	rails_secure = 1
+	loadedammo = new ammotype(src)
+	loadedcapacitor = new capacitortype(src)
+	loadedcapacitor.stored_charge = loadedcapacitor.maximum_charge 
+
+/obj/item/weapon/gun/projectile/railgun/preloaded/godslayer
+	ammotype = /obj/item/weapon/nullrod
+	capacitortype = /obj/item/weapon/stock_parts/capacitor/adv/super/ultra
 
 #undef MEGAWATT
 #undef TEN_MEGAWATTS

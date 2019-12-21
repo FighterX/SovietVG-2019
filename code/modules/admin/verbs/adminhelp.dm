@@ -101,16 +101,10 @@ var/list/adminhelp_ignored_words = list("unknown","the","a","an","of","monkey","
 				admin_number_afk++
 			if(X.prefs.toggles & SOUND_ADMINHELP)
 				X << 'sound/effects/adminhelp.ogg'
-			if(X.prefs.special_popup)
-				X << output(msg, "window1.msay_output")
-			else
-				to_chat(X, msg)
+			X.output_to_special_tab(msg)
 
 	//show it to the person adminhelping too
-	if(src.prefs.special_popup)
-		src << output("\[[time_stamp()]] <span class='info'>PM to - <b>Admins</b>: [original_msg]</span>", "window1.msay_output")
-	else
-		to_chat(src, "<span class='notice'>PM to-<b>Admins</b>: [original_msg]</span>")
+	output_to_special_tab("<span class='notice'>PM to-<b>Admins</b>: [original_msg]</span>")
 
 	var/admin_number_present = admins.len - admin_number_afk
 	log_admin("HELP: [key_name(src)]: [original_msg] - heard by [admin_number_present] non-AFK admins.")

@@ -365,7 +365,7 @@
 	name = "Delightful Effect"
 	desc = "A more powerful version of Full Glass. Makes the infected feel delightful."
 	stage = 4
-	badness = EFFECT_DANGER_HINDRANCE
+	badness = EFFECT_DANGER_HELPFUL
 
 /datum/disease2/effect/delightful/activate(var/mob/living/mob)
 	to_chat(mob, "<span class = 'notice'>You feel delightful!</span>")
@@ -377,15 +377,22 @@
 	name = "Arachnogenesis Effect"
 	desc = "Converts the infected's stomach to begin producing creatures of the arachnid variety."
 	stage = 4
-	badness = EFFECT_DANGER_HINDRANCE
+	badness = EFFECT_DANGER_HARMFUL
 	var/spawn_type=/mob/living/simple_animal/hostile/giant_spider/spiderling
 	var/spawn_name="spiderling"
 
 /datum/disease2/effect/spawn/activate(var/mob/living/mob)
 	playsound(mob.loc, 'sound/effects/splat.ogg', 50, 1)
 
-	new spawn_type(get_turf(mob))
-	mob.emote("me",1,"vomits up a live [spawn_name]!")
+	if (ismouse(mob))
+		new spawn_type(get_turf(mob))
+		new spawn_type(get_turf(mob))
+		new spawn_type(get_turf(mob))
+		mob.emote("me",1,"explodes into [spawn_name]s!")
+		mob.gib()
+	else
+		new spawn_type(get_turf(mob))
+		mob.emote("me",1,"vomits up a live [spawn_name]!")
 
 /datum/disease2/effect/spawn/roach
 	name = "Blattogenesis Effect"
@@ -412,7 +419,7 @@
 	name = "Toxin Sublimation"
 	desc = "Converts the infected's pores and respiratory organs to synthesize Plasma gas."
 	stage = 4
-	badness = EFFECT_DANGER_HARMFUL
+	badness = EFFECT_DANGER_DEADLY
 
 /datum/disease2/effect/plasma/activate(var/mob/living/mob)
 	//var/src = mob
@@ -850,3 +857,54 @@
 		affected.my_appearance.h_style = old_h_style
 		affected.update_body(0)
 		affected.update_hair()
+
+/datum/disease2/effect/magnitis
+	name = "Magnitis"
+	desc = "This disease disrupts the magnetic field of the body, making it act as if a powerful magnet."
+	encyclopedia = "Injections of iron help temporarily stabilize the magnetic field."
+	stage = 4
+	badness = EFFECT_DANGER_HARMFUL
+
+/datum/disease2/effect/magnitis/activate(var/mob/living/mob)
+	if(mob.reagents.has_reagent(IRON))
+		return
+
+	switch(count)
+		if(0 to 10)
+			if(prob(2))
+				to_chat(mob, "<span class='warning'>You feel a slight shock course through your body.</span>")
+				for(var/obj/M in orange(2,mob))
+					if(!M.anchored && (M.is_conductor()))
+						step_towards(M,mob)
+				for(var/mob/living/silicon/S in orange(2,mob))
+					if(istype(S, /mob/living/silicon/ai))
+						continue
+					step_towards(S,mob)
+		if(11 to 20)
+			if(prob(4))
+				to_chat(mob, "<span class='warning'>You feel a strong shock course through your body.</span>")
+				for(var/obj/M in orange(4,mob))
+					if(!M.anchored && (M.is_conductor()))
+						var/iter = rand(1,2)
+						for(var/i=0,i<iter,i++)
+							step_towards(M,mob)
+				for(var/mob/living/silicon/S in orange(4,mob))
+					if(istype(S, /mob/living/silicon/ai))
+						continue
+					var/iter = rand(1,2)
+					for(var/i=0,i<iter,i++)
+						step_towards(S,mob)
+		if(21 to INFINITY)
+			if(prob(8))
+				to_chat(mob, "<span class='warning'>You feel a powerful shock course through your body.</span>")
+				for(var/obj/M in orange(6,mob))
+					if(!M.anchored && (M.is_conductor()))
+						var/iter = rand(1,3)
+						for(var/i=0,i<iter,i++)
+							step_towards(M,mob)
+				for(var/mob/living/silicon/S in orange(6,mob))
+					if(istype(S, /mob/living/silicon/ai))
+						continue
+					var/iter = rand(1,3)
+					for(var/i=0,i<iter,i++)
+						step_towards(S,mob)

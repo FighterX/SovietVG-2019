@@ -14,7 +14,7 @@
 		//testing("Cannot monkey-ify [M], type is [M.type].")
 		return
 	var/mob/living/carbon/human/H = M
-	var/mob/living/carbon/monkey/O = H.monkeyize()
+	var/mob/living/carbon/monkey/O = H.monkeyize(choose_name = TRUE)
 	H = null
 	if (connected) // properly put new monkey inside machine
 		var/obj/machinery/dna_scannernew/C = connected
@@ -46,6 +46,9 @@
 		animation.master = null
 		qdel(animation)
 
+	for (var/mob/living/simple_animal/borer/borer in Mo)
+		if (borer.controlling)
+			Mo.do_release_control(0)
 
 	var/mob/living/carbon/human/O = new(src)
 	if(Mo.greaterform)

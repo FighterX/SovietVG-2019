@@ -172,12 +172,14 @@
 	key = "gag"
 	key_third_person = "gags"
 	message = "gags."
+	message_mime = "gags silently."
 	emote_type = EMOTE_AUDIBLE
 
 /datum/emote/living/carbon/gasp
 	key = "gasp"
 	key_third_person = "gasps"
 	message = "gasps!"
+	message_mime = "gasps silently!"
 	emote_type = EMOTE_AUDIBLE
 	stat_allowed = UNCONSCIOUS
 
@@ -208,6 +210,7 @@
 	key = "burp"
 	key_third_person = "burps"
 	message = "burps."
+	message_mime = "appears to burp."
 	emote_type = EMOTE_AUDIBLE
 
 /datum/emote/living/carbon/choke
@@ -220,13 +223,21 @@
 	key = "chuckle"
 	key_third_person = "chuckles"
 	message = "chuckles."
+	message_mime = "imitates a smug chuckle."
 	emote_type = EMOTE_AUDIBLE
 
 /datum/emote/living/carbon/blush
 	key = "blush"
 	key_third_person = "blushes"
 	message = "blushes."
-
+	
+/datum/emote/living/carbon/fear
+	key = "fear"
+	key_third_person = "fears"
+	message = "screams in fear!"
+	message_mime = "acts out a fearful scream!"
+	emote_type = EMOTE_AUDIBLE
+	
 /datum/emote/living/carbon/sound
 	var/list/science_sounds = null
 	var/list/male_sounds = null

@@ -216,7 +216,7 @@
 		"/obj/item/taperoll/syndie/police",
 		"/obj/item/weapon/gun/energy/taser",
 		"/obj/item/weapon/gun/energy/stunrevolver",
-		"/obj/item/weapon/gun/projectile/sec",
+		"/obj/item/weapon/gun/projectile/glock",
 		"/obj/item/weapon/legcuffs/bolas",
 		"/obj/item/device/hailer",
 		"/obj/item/weapon/melee/telebaton",
@@ -300,7 +300,9 @@
 	item_state = "champion"
 	storage_slots = 1
 	can_only_hold = list(
-		"/obj/item/clothing/mask/luchador"
+		"/obj/item/clothing/mask/luchador",
+		"/obj/item/weapon/disk/nuclear",
+		"/obj/item/weapon/reagent_containers/food/drinks/golden_cup"
 		)
 
 

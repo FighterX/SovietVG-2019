@@ -75,10 +75,13 @@
 	material = "wood"
 
 /obj/item/stack/tile/wood/proc/build(turf/S as turf)
-	if(istype(S,/turf/unsimulated/floor/asteroid))
-		S.ChangeTurf(/turf/simulated/floor/plating/deck/airless)
-	else
-		S.ChangeTurf(/turf/simulated/floor/plating/deck)
+	if(S.air)
+		var/datum/gas_mixture/GM = S.air
+		if(GM.pressure > HALF_ATM)
+			S.ChangeTurf(/turf/simulated/floor/plating/deck)
+			return
+	S.ChangeTurf(/turf/simulated/floor/plating/deck/airless)
+
 
 /obj/item/stack/tile/wood/afterattack(atom/target, mob/user, adjacent, params)
 	if(adjacent)
@@ -159,5 +162,7 @@ obj/item/stack/tile/slime
 
 /obj/item/stack/tile/slime/adjust_slowdown(mob/living/L, current_slowdown)
 	if(isslimeperson(L) || isslime(L))
-		return -1
-	return current_slowdown+5
+		current_slowdown *= 5
+	else
+		current_slowdown *= 0.01
+	..()

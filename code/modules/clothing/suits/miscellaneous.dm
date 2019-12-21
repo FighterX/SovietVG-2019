@@ -176,7 +176,7 @@
 	clothing_flags = ONESIZEFITSALL
 	body_parts_covered = ARMS|LEGS|FULL_TORSO|FEET
 	wizard_garb = 1 //Allows lightning to be used
-	allowed = list(/obj/item/weapon/melee/energy/sword, /obj/item/weapon/dualsaber) //Fits e-swords
+	allowed = list(/obj/item/weapon/melee/energy/sword, /obj/item/weapon/melee/energy/sword/dualsaber) //Fits e-swords
 
 /obj/item/clothing/suit/hastur
 	name = "Hastur's Robes"
@@ -393,6 +393,7 @@
 	icon_state = "simonjacket"
 	species_fit = list(VOX_SHAPED)
 	body_parts_covered = ARMS|LEGS|FULL_TORSO|IGNORE_INV
+	allowed = list (/obj/item/weapon/pickaxe/drill)
 
 /obj/item/clothing/suit/kaminacape
 	name = "Kamina's Cape"

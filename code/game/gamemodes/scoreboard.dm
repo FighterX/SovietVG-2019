@@ -14,7 +14,7 @@
 	if(bomberman_mode)
 		completions += "<br>[bomberman_declare_completion()]"
 
-	if(achievements.len)
+	if(ticker.achievements.len)
 		completions += "<br>[achievement_declare_completion()]"
 
 	var/ai_completions = ""
@@ -240,13 +240,16 @@
 
 	//Check how many uncleaned mess are on the station. We can't run through cleanable for reasons, so yeah, long
 	for(var/obj/effect/decal/cleanable/M in decals)
-		if(M.z != map.zMainStation) //Won't work on multi-Z stations, but will do for now
+		if(M.z != STATION_Z) //Won't work on multi-Z stations, but will do for now
 			continue
 		if(M.messcheck())
 			score["mess"]++
 
 	for(var/obj/item/trash/T in trash_items)
-		if(T.z != map.zMainStation) //Won't work on multi-Z stations, but will do for now
+		if(T.z != STATION_Z) //Won't work on multi-Z stations, but will do for now
+			continue
+		var/area/A = get_area(T)
+		if(istype(A,/area/surface/junkyard))
 			continue
 		score["litter"]++
 
@@ -612,10 +615,24 @@
 		round_end_info = dat
 		log_game(dat)
 
-		stat_collection.crewscore = score["crewscore"]
+		stat_collection.crew_score = score["crewscore"]
 
 	var/datum/browser/popup = new(src, "roundstats", "Round End Summary", 1000, 600)
 	popup.set_content(dat)
 	popup.open()
 
 	return
+
+/datum/achievement
+    var/item
+    var/ckey
+    var/mob_name
+    var/award_name
+    var/award_desc
+
+/datum/achievement/New(var/item, var/ckey, var/mob_name, var/award_name, var/award_desc)
+	src.item = item
+	src.ckey = ckey
+	src.mob_name = mob_name
+	src.award_name = award_name
+	src.award_desc = award_desc

@@ -158,7 +158,7 @@ atom/movable/GotoAirflowDest(n)
 		xo *= -1
 		yo *= -1
 
-	airflow_speed = Clamp(n * (9 / airflow_falloff), 1, 9)
+	airflow_speed = clamp(n * (9 / airflow_falloff), 1, 9)
 
 	airflow_dest = null
 
@@ -188,14 +188,14 @@ atom/movable/GotoAirflowDest(n)
 			if(od)
 				setDensity(TRUE)
 			if ((!( src.airflow_dest ) || src.loc == src.airflow_dest))
-				airflow_dest = locate(Clamp(x + xo, 1, world.maxx), Clamp(y + yo, 1, world.maxy), z)
+				airflow_dest = locate(clamp(x + xo, 1, world.maxx), clamp(y + yo, 1, world.maxy), z)
 			if ((src.x == 1 || src.x == world.maxx || src.y == 1 || src.y == world.maxy))
 				break
 			if(!isturf(loc))
 				break
 			if(curturf != get_turf(src)) //We've managed to get to our feet and move away
 				break
-			if(!check_airflow_movable()) //We've turned our magboots on, or become unstunnable, etc.
+			if(!check_airflow_movable(n*10)) //We've turned our magboots on, or become unstunnable, etc.
 				break
 			set_glide_size(DELAY2GLIDESIZE(sleep_time))
 			step_towards(src, src.airflow_dest)

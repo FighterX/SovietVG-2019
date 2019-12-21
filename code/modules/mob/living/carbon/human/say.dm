@@ -22,10 +22,6 @@
 	return "says, [text]";
 
 /mob/living/carbon/human/treat_speech(var/datum/speech/speech, var/genesay=0)
-	if(!(copytext(speech.message, 1, 2) == "*"/* || (mind && mind.changeling && department_radio_keys[copytext(speech.message, 1, 3)] != "changeling")*/))
-		for(var/obj/item/I in get_all_slots() + held_items)
-			I.affect_speech(speech, src)
-
 	if ((M_HULK in mutations) && health >= 25 && length(speech.message))
 		speech.message = "[uppertext(replacetext(speech.message, ".", "!"))]!!" //because I don't know how to code properly in getting vars from other files -Bro
 	if (src.slurring || (undergoing_hypothermia() == MODERATE_HYPOTHERMIA && prob(25)))
@@ -171,6 +167,9 @@
 			return 1
 		if (istype(other, /mob/living/carbon/slime))
 			return 1
+		if (istype(other, /mob/living/carbon/complex/gondola))
+			return 1
+
 
 	//This is already covered by mob/say_understands()
 	//if (istype(other, /mob/living/simple_animal))

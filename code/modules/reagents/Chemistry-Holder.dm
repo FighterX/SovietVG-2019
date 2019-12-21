@@ -13,6 +13,7 @@ var/const/INGEST = 2
 	var/atom/my_atom = null
 	var/last_ckey_transferred_to_this = ""	//The ckey of the last player who transferred reagents into this reagent datum.
 	var/chem_temp = T20C
+	var/obscured = FALSE
 
 /datum/reagents/New(maximum=100)
 	maximum_volume = maximum
@@ -344,7 +345,8 @@ trans_to_atmos(var/datum/gas_mixture/target, var/amount=1, var/multiplier=1, var
 		var/datum/reagent/R = A
 		if(M && R)
 			R.on_mob_life(M, alien)
-			R.metabolize(M)
+			if(R)
+				R.metabolize(M)
 	update_total()
 
 /datum/reagents/proc/update_aerosol(var/mob/M)
@@ -528,12 +530,15 @@ trans_to_atmos(var/datum/gas_mixture/target, var/amount=1, var/multiplier=1, var
 /datum/reagents/proc/update_total()
 	total_volume = 0
 	amount_cache.len = 0
+	obscured = FALSE
 	for(var/datum/reagent/R in reagent_list)
 		if(R.volume < R.custom_metabolism/2) //Used to be 0.1, changing this to custom_metabolism/2 to alter balance as little as possible since the default metabolism is 0.2
 			del_reagent(R.id,update_totals=0)
 		else
 			total_volume += R.volume
 			amount_cache += list(R.id = R.volume)
+		if(R.flags & CHEMFLAG_OBSCURING)
+			obscured = TRUE
 	return 0
 
 /datum/reagents/proc/clear_reagents()
@@ -546,16 +551,18 @@ trans_to_atmos(var/datum/gas_mixture/target, var/amount=1, var/multiplier=1, var
 		my_atom.on_reagent_change()
 	return 0
 
-/datum/reagents/proc/reaction(var/atom/A, var/method=TOUCH, var/volume_modifier=0)
+/datum/reagents/proc/reaction(var/atom/A, var/method=TOUCH, var/volume_modifier=0, var/remove_reagents = FALSE, var/mob_reagent_threshold = 0)
 
 	switch(method)
 		if(TOUCH)
 			for(var/datum/reagent/R in reagent_list)
 				if(ismob(A))
-					if(isanimal(A))
-						R.reaction_animal(A, TOUCH, R.volume+volume_modifier)
-					else
-						R.reaction_mob(A, TOUCH, R.volume+volume_modifier)
+					var/datum/reagent/MR = A.reagents.get_reagent_by_type(R.type)
+					if(!mob_reagent_threshold || !MR || (mob_reagent_threshold > MR.volume))
+						if(isanimal(A))
+							R.reaction_animal(A, TOUCH, R.volume+volume_modifier)
+						else
+							R.reaction_mob(A, TOUCH, R.volume+volume_modifier, remove_reagents)
 				if(isturf(A))
 					R.reaction_turf(A, R.volume+volume_modifier)
 				if(istype(A, /obj))
@@ -571,7 +578,6 @@ trans_to_atmos(var/datum/gas_mixture/target, var/amount=1, var/multiplier=1, var
 					R.reaction_turf(A, R.volume+volume_modifier)
 				if(istype(A, /obj) && R)
 					R.reaction_obj(A, R.volume+volume_modifier)
-	return
 
 /datum/reagents/proc/add_reagent(var/reagent, var/amount, var/list/data=null, var/reagtemp = T0C+20)
 	if(!my_atom)
@@ -832,7 +838,9 @@ trans_to_atmos(var/datum/gas_mixture/target, var/amount=1, var/multiplier=1, var
 	reagent_list.Cut()
 
 	if(my_atom)
+		my_atom.reagents = null
 		my_atom = null
+	..()
 
 /**
  * Helper proc to retrieve the 'bad' reagents in the holder. Used for logging.
@@ -897,6 +905,38 @@ trans_to_atmos(var/datum/gas_mixture/target, var/amount=1, var/multiplier=1, var
 	else
 		chem_temp = max(chem_temp + temp_change, received_temperature, 0)
 	handle_reactions()
+
+/datum/reagents/proc/get_examine(var/mob/user, var/vis_override, var/blood_type)
+	if(obscured && !vis_override)
+		to_chat(user, "<span class='info'>You can't quite make out the contents.</span>")
+		return
+	if (istype(my_atom,/obj/item/weapon/reagent_containers/food/drinks/drinkingglass) && reagent_list.len)
+		to_chat(user, "<span class='info'>It contains [total_volume] units of what looks like [get_master_reagent_name()].</span>")
+		return
+	to_chat(user, "It contains:")
+	if(!user.hallucinating())
+		if(reagent_list.len)
+			for(var/datum/reagent/R in reagent_list)
+				if(blood_type && R.id == BLOOD)
+					var/type = R.data["blood_type"]
+					to_chat(user, "<span class='info'>[R.volume] units of [R.name], of type [type]</span>")
+				else
+					to_chat(user, "<span class='info'>[R.volume] units of [R.name]</span>")
+		else
+			to_chat(user, "<span class='info'>Nothing.</span>")
+
+	else //Show stupid things to hallucinating mobs
+		var/list/fake_reagents = list("Water", "Orange juice", "Banana juice", "Tungsten", "Chloral Hydrate", "Helium",\
+			"Sea water", "Energy drink", "Gushin' Granny", "Salt", "Sugar", "something yellow", "something red", "something blue",\
+			"something suspicious", "something smelly", "something sweet", "Soda", "something that reminds you of home",\
+			"Chef's Special")
+		for(var/i, i < rand(1,10), i++)
+			var/fake_amount = rand(1,30)
+			var/fake_reagent = pick(fake_reagents)
+			fake_reagents -= fake_reagent
+
+			to_chat(user, "<span class='info'>[fake_amount] units of [fake_reagent]</span>")
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 

@@ -280,13 +280,18 @@
 
 /obj/effect/decal/cleanable/virusdish/Crossed(var/mob/living/perp)
 	..()
-	FeetStab(perp,damage = 10,knockdown = 0)
-	infection_attempt(perp)
+	if (istype(perp))
+		FeetStab(perp,damage = 10,knockdown = 0)
+		infection_attempt(perp)
 
 /obj/effect/decal/cleanable/virusdish/proc/infection_attempt(var/mob/living/perp)
+	if (!contained_virus)
+		return
 	//Now if your feet aren't well protected, or are bleeding, you might get infected.
 	var/block = 0
 	var/bleeding = 0
+	if(attempt_colony(perp,contained_virus,"from exposure to a broken virus dish."))
+		return
 	if (perp.lying)
 		block = perp.check_contact_sterility(FULL_TORSO)
 		bleeding = perp.check_bodypart_bleeding(FULL_TORSO)

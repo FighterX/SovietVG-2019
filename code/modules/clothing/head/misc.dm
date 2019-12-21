@@ -82,8 +82,7 @@
 	name = "hastur's hood"
 	desc = "It's unspeakably stylish."
 	icon_state = "hasturhood"
-	flags = FPRINT|HIDEHAIRCOMPLETELY
-	body_parts_covered = EARS|HEAD
+	body_parts_covered = EARS|HEAD|HIDEHAIR
 
 /obj/item/clothing/head/nursehat
 	name = "nurse's hat"
@@ -250,8 +249,11 @@
 			to_chat(wearer, "<span class=\"warning\">You feel positively euphoric!</span>")
 
 //TIPS FEDORA
-/obj/item/clothing/head/fedora/proc/tip_fedora()
-	usr.visible_message("[usr] tips \his fedora.", "You tip your fedora.")
+/obj/item/clothing/head/fedora/proc/tip_fedora(mob/user)
+	if(user.attack_delayer.blocked())
+		return
+	user.visible_message("[user] tips \his fedora.", "You tip your fedora.")
+	user.delayNextAttack(1 SECONDS)
 
 /datum/action/item_action/tip_fedora
 	name = "Tip Fedora"
@@ -260,7 +262,7 @@
 	var/obj/item/clothing/head/fedora/T = target
 	if(!istype(T))
 		return
-	T.tip_fedora()
+	T.tip_fedora(usr)
 
 /obj/item/clothing/head/fedora/white
 	name = "white fedora"
@@ -286,8 +288,7 @@
 	desc = "Eeeee~heheheheheheh!"
 	icon_state = "witch"
 	item_state = "witch"
-	flags = FPRINT|HIDEHAIRCOMPLETELY
-	body_parts_covered = EARS|HEAD
+	body_parts_covered = EARS|HEAD|HIDEHAIR
 	siemens_coefficient = 2.0
 
 /obj/item/clothing/head/chicken
@@ -295,8 +296,7 @@
 	desc = "Bkaw!"
 	icon_state = "chickenhead"
 	item_state = "chickensuit"
-	flags = FPRINT
-	body_parts_covered = FULL_HEAD|BEARD
+	body_parts_covered = FULL_HEAD|BEARD|HIDEHAIR
 	siemens_coefficient = 2.0
 
 /obj/item/clothing/head/bearpelt
@@ -304,21 +304,29 @@
 	desc = "Not as fuzzy as the real thing."
 	icon_state = "bearpelt"
 	item_state = "bearpelt"
-	flags = FPRINT|HIDEHAIRCOMPLETELY
-	body_parts_covered = EARS|HEAD
+	body_parts_covered = EARS|HEAD|HIDEHAIR
 	siemens_coefficient = 2.0
 
 /obj/item/clothing/head/bearpelt/real
 	name = "bear pelt hat"
 	desc = "Now that's what I call fuzzy."
 
+/obj/item/clothing/head/bearpelt/real/spare
+	name = "spare bear pelt"
+	desc = "shimmers in the light"
+	icon_state = "sparebearpelt"
+	item_state = "sparebearpelt"
+	slot_flags = SLOT_ID|SLOT_HEAD
+
+/obj/item/clothing/head/bearpelt/real/spare/GetAccess()
+	return get_all_accesses()
+
 /obj/item/clothing/head/xenos
 	name = "xenos helmet"
 	icon_state = "xenos"
 	item_state = "xenos_helm"
 	desc = "A helmet made out of chitinous alien hide."
-	flags = FPRINT
-	body_parts_covered = FULL_HEAD|BEARD
+	body_parts_covered = FULL_HEAD|BEARD|HIDEHAIR
 	siemens_coefficient = 2.0
 
 /obj/item/clothing/head/batman
@@ -528,3 +536,18 @@
 	desc = "A red fancy looking wide-brimmed hat. It's even got a feather in it."
 	icon_state = "widehat_red"
 	item_state = "widehat_red"
+
+/obj/item/clothing/head/pharaoh
+	name = "pharaoh's headpiece"
+	desc = "An ornate golden headpiece worn by the ancient rulers of Space Egypt."
+	icon_state = "pharaoh"
+	item_state = "pharaoh"
+	wizard_garb = TRUE
+	body_parts_covered = FULL_HEAD|HEAD|EARS
+
+/obj/item/clothing/head/sombrero
+	name = "sombrero"
+	desc = "Meanwhile in Neo Space Mexico."
+	icon_state = "sombrero"
+	item_state = "sombrero"
+
