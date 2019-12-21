@@ -110,8 +110,8 @@
 				send_pm_type = "Admin "
 				recieve_pm_type = "Admin"
 			else
-			send_pm_type = holder.rank + " "
-			recieve_pm_type = holder.rank
+				send_pm_type = holder.rank + " "
+				recieve_pm_type = holder.rank
 
 	else if(!C.holder)
 		to_chat(src, "<span class='red'>Error: Admin-PM: Non-admin to non-admin PM communication is forbidden.</span>")
